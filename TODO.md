@@ -14,10 +14,10 @@ This document tracks the planned improvements and further development for the UP
 
 -   **Advanced Topic Filtering (NewsletterGenerator):** (Completed) Implemented tag-based filtering for articles and user subscriptions.
 
--   **Configuration for RSS Feeds:** Explore options to manage RSS feed URLs dynamically (e.g., Cosmos DB, Azure App Configuration) instead of `rss_feeds.txt`.
+-   **Configuration for RSS Feeds:** (Completed) RSS feed URLs are now managed dynamically from Cosmos DB instead of `rss_feeds.txt`.
 
 ## Low Priority (Good Practices/Future-proofing)
 
--   **Structured Logging:** Ensure all logs are structured (e.g., JSON) and include relevant contextual information for improved observability in Azure Application Insights.
+-   **Structured Logging:** (Completed) Implemented structured logging using `structlog` across the function app.
 
--   **Comprehensive Unit and Integration Tests:** Expand test coverage for all features, especially API integrations and data processing logic.
+-   **Comprehensive Unit and Integration Tests:** (In Progress) Converted `test_mongo.py` to `pytest` and updated for new schema. Still need to expand coverage for new features and edge cases.
