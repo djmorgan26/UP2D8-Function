@@ -1,4 +1,3 @@
-import logging
 import os
 import pymongo
 import google.generativeai as genai
@@ -7,11 +6,17 @@ import markdown # Import the markdown library
 from shared.email_service import EmailMessage, SMTPProvider
 from dotenv import load_dotenv
 from shared.key_vault_client import get_secret_client
+import structlog
+from shared.logger_config import configure_logger
+
+# Configure structlog
+configure_logger()
+logger = structlog.get_logger()
 
 def main(timer: func.TimerRequest) -> None:
     load_dotenv()
-    logging.info('Python timer trigger function ran at %s', timer.past_due)
-    logging.info('NewsletterGenerator function is executing.')
+    logger.info('Python timer trigger function ran', past_due=timer.past_due)
+    logger.info('NewsletterGenerator function is executing.')
 
     try:
         # Get configuration from environment variables and Key Vault
@@ -48,7 +53,7 @@ def main(timer: func.TimerRequest) -> None:
         articles = list(articles_collection.find({'processed': False}))
 
         if not articles:
-            logging.info("No new articles to process.")
+            logger.info("No new articles to process.")
             return
 
         sent_newsletters_count = 0
@@ -61,7 +66,7 @@ def main(timer: func.TimerRequest) -> None:
                 relevant_articles = [a for a in articles if any(tag in a.get('tags', []) for tag in user_subscribed_tags)]
 
                 if not relevant_articles:
-                    logging.info(f"No relevant articles for user {user['email']} with subscribed tags {user_subscribed_tags}")
+                    logger.info("No relevant articles for user", user_email=user['email'], subscribed_tags=user_subscribed_tags)
                     continue
 
                 # Generate newsletter content with Gemini
@@ -74,11 +79,11 @@ def main(timer: func.TimerRequest) -> None:
                     response = model.generate_content(prompt)
                     newsletter_content_markdown = response.text
                 except Exception as e:
-                    logging.error(f"Error generating content with Gemini for user {user['email']}: {e}")
+                    logger.error("Error generating content with Gemini for user", user_email=user['email'], error=str(e))
                     continue # Skip to the next user if Gemini API fails
 
                 if not newsletter_content_markdown:
-                    logging.warning(f"Gemini API returned empty content for user {user['email']}. Skipping email.")
+                    logger.warning("Gemini API returned empty content for user. Skipping email.", user_email=user['email'])
                     continue
 
                 # Convert Markdown to HTML
@@ -95,20 +100,20 @@ def main(timer: func.TimerRequest) -> None:
                 # Note: The send_email method in SMTPProvider is not async, so we call it directly.
                 if smtp_provider.send_email(email_message):
                     sent_newsletters_count += 1
-                    logging.info(f"Newsletter sent to {user['email']}")
+                    logger.info("Newsletter sent", user_email=user['email'])
                 else:
-                    logging.error(f"Failed to send newsletter to {user['email']}")
+                    logger.error("Failed to send newsletter", user_email=user['email'])
 
             except Exception as e:
-                logging.error(f"Error processing user {user['email']}: {e}")
+                logger.error("Error processing user", user_email=user['email'], error=str(e))
 
         # Mark articles as processed
         article_ids = [a['_id'] for a in articles]
         articles_collection.update_many({'_id': {'$in': article_ids}}, {'$set': {'processed': True}})
 
-        logging.info(f'Sent {sent_newsletters_count} newsletters.')
+        logger.info('Sent newsletters', count=sent_newsletters_count)
 
     except Exception as e:
-        logging.error(f'An error occurred in NewsletterGenerator: {e}')
+        logger.error('An error occurred in NewsletterGenerator', error=str(e))
 
-    logging.info('NewsletterGenerator function execution finished.')
+    logger.info('NewsletterGenerator function execution finished.')

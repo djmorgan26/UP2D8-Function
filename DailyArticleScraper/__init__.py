@@ -1,4 +1,3 @@
-import logging
 import os
 import feedparser
 import pymongo
@@ -7,6 +6,12 @@ from azure.keyvault.secrets import SecretClient
 import azure.functions as func
 from dotenv import load_dotenv
 from shared.key_vault_client import get_secret_client
+import structlog
+from shared.logger_config import configure_logger
+
+# Configure structlog
+configure_logger()
+logger = structlog.get_logger()
 
 # Define a simple keyword-based tagging system
 TAG_KEYWORDS = {
@@ -28,8 +33,8 @@ def assign_tags(title: str, summary: str) -> list[str]:
 
 def main(timer: func.TimerRequest) -> None:
     load_dotenv()
-    logging.info('Python timer trigger function ran at %s', timer.past_due)
-    logging.info('DailyArticleScraper function is executing.')
+    logger.info('Python timer trigger function ran', past_due=timer.past_due)
+    logger.info('DailyArticleScraper function is executing.')
 
     try:
         # Get configuration from environment variables and Key Vault
@@ -54,14 +59,14 @@ def main(timer: func.TimerRequest) -> None:
 
         new_articles_count = 0
         for feed_url in rss_feeds:
-            logging.info(f'Parsing feed: {feed_url}')
+            logger.info('Parsing feed', feed_url=feed_url)
             try:
                 feed = feedparser.parse(feed_url)
                 if feed.bozo:
-                    logging.warning(f'Malformed feed detected for {feed_url}: {feed.bozo_exception}')
+                    logger.warning('Malformed feed detected', feed_url=feed_url, bozo_exception=str(feed.bozo_exception))
                     continue
             except Exception as e:
-                logging.error(f'Error parsing feed {feed_url}: {e}')
+                logger.error('Error parsing feed', feed_url=feed_url, error=str(e))
                 continue
 
             for entry in feed.entries:
@@ -80,13 +85,13 @@ def main(timer: func.TimerRequest) -> None:
                     articles_collection.insert_one(article)
                     new_articles_count += 1
                 except pymongo.errors.DuplicateKeyError:
-                    logging.warning(f'Article already exists: {entry.link}')
+                    logger.warning('Article already exists', link=entry.link)
                 except Exception as e:
-                    logging.error(f'Error processing article {entry.link}: {e}')
+                    logger.error('Error processing article', link=entry.link, error=str(e))
 
-        logging.info(f'Added {new_articles_count} new articles.')
+        logger.info('Added new articles', count=new_articles_count)
 
     except Exception as e:
-        logging.error(f'An error occurred in DailyArticleScraper: {e}')
+        logger.error('An error occurred in DailyArticleScraper', error=str(e))
 
-    logging.info('DailyArticleScraper function execution finished.')
+    logger.info('DailyArticleScraper function execution finished.')
