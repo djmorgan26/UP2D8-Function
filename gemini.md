@@ -75,7 +75,7 @@ This service is designed for maximum security using Azure Key Vault.
 
 ### Secret Management
 -   **In Azure:** The deployed Function App uses a **Managed Identity** to authenticate with Key Vault.
--   **Locally:** The service uses `DefaultAzureCredential`, which will use the credentials of the developer currently logged into the Azure CLI.
+    -   **Locally:** The service uses `DefaultAzureCredential`, which will use the credentials of the developer currently logged into the Azure CLI.
 
 ### Local Setup
 1.  **Log in to Azure:**
@@ -84,24 +84,24 @@ This service is designed for maximum security using Azure Key Vault.
     ```
     Ensure the logged-in user has "Get" permissions on secrets in the project's Key Vault.
 
-2.  **Create `local.settings.json` file:**
-    This file is the local equivalent of Application Settings in Azure and is ignored by git. Create it in the root of the project.
+2.  **Create `.env` file:**
+    This file stores your local environment variables. Create it in the root of the project and populate it with the following (replace placeholders with your actual values):
 
-    ```json
-    {
-      "IsEncrypted": false,
-      "Values": {
-        "AzureWebJobsStorage": "",
-        "FUNCTIONS_WORKER_RUNTIME": "python",
-        "KEY_VAULT_URI": "https://personal-key-vault1.vault.azure.net/",
-        "BREVO_SMTP_HOST": "smtp-relay.brevo.com",
-        "BREVO_SMTP_PORT": "587",
-        "BREVO_SMTP_USER": "9a9964001@smtp-brevo.com",
-        "SENDER_EMAIL": "newsletter@your-domain.com"
-      }
-    }
+    ```
+    KEY_VAULT_URI=https://personal-key-vault1.vault.azure.net/
+    BREVO_SMTP_HOST=smtp-relay.brevo.com
+    BREVO_SMTP_PORT=587
+    BREVO_SMTP_USER=9a9964001@smtp-brevo.com
+    SENDER_EMAIL=newsletter@your-domain.com
     ```
 
+3.  **Create `rss_feeds.txt` file:**
+    This file contains a list of RSS feed URLs, one per line. It is ignored by git. Create it in the root of the project.
+
+    ```
+    https://rss.cnn.com/rss/cnn_topstories.rss
+    https://feeds.bbci.co.uk/news/rss.xml
+    ```
 ## 3. Installation & Local Execution
 
 1.  **Create and activate a virtual environment:**
@@ -114,7 +114,6 @@ This service is designed for maximum security using Azure Key Vault.
     ```bash
     pip install -r requirements.txt
     ```
-    *(Note: a `requirements.txt` file will need to be created containing `azure-functions`, `pymongo`, `feedparser`, `google-generativeai`, `azure-identity`, `azure-keyvault-secrets`)*
 
 3.  **Run the functions locally:**
     ```bash
@@ -144,8 +143,32 @@ This service contains two timer-triggered functions:
 
 3.  **Configure Application Settings:**
     -   In your Function App, go to **Settings > Configuration**.
-    -   Add new Application Settings for all the non-secret values listed in `local.settings.json` (e.g., `KEY_VAULT_URI`, `BREVO_SMTP_HOST`, etc.).
+    -   Add new Application Settings for all the non-secret values that were previously in `local.settings.json` (e.g., `KEY_VAULT_URI`, `BREVO_SMTP_HOST`, `BREVO_SMTP_PORT`, `BREVO_SMTP_USER`, `SENDER_EMAIL`). These will be loaded as environment variables by the Function App.
 
 4.  **Deploy Code:**
     -   The recommended method is to use the VS Code Azure extension, which handles the deployment process seamlessly.
     -   Alternatively, use the Azure Functions Core Tools CLI: `func azure functionapp publish <YourFunctionAppName>`
+
+## 6. Development Notes
+
+### Virtual Environment
+
+-   **Creation:** To create a virtual environment, run the following command in the root of the project:
+    ```bash
+    python3 -m venv venv
+    ```
+
+-   **Activation:** To activate the virtual environment, use the following command:
+    -   **macOS/Linux:**
+        ```bash
+        source venv/bin/activate
+        ```
+    -   **Windows:**
+        ```bash
+        venv\Scripts\activate
+        ```
+
+-   **Installation:** To install packages from `requirements.txt` into the active virtual environment, run:
+    ```bash
+    pip install -r requirements.txt
+    ```

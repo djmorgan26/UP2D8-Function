@@ -8,3 +8,4 @@ local.settings.json
 
 # Environment variables
 .env
+rss_feeds.txt
