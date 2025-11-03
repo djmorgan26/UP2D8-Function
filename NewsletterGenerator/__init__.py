@@ -66,8 +66,17 @@ def main(timer: func.TimerRequest) -> None:
                 for article in relevant_articles:
                     prompt += f"- **{article['title']}**: {article['summary']}\n"
                 
-                response = model.generate_content(prompt)
-                newsletter_content_markdown = response.text
+                newsletter_content_markdown = ""
+                try:
+                    response = model.generate_content(prompt)
+                    newsletter_content_markdown = response.text
+                except Exception as e:
+                    logging.error(f"Error generating content with Gemini for user {user['email']}: {e}")
+                    continue # Skip to the next user if Gemini API fails
+
+                if not newsletter_content_markdown:
+                    logging.warning(f"Gemini API returned empty content for user {user['email']}. Skipping email.")
+                    continue
 
                 # Create and send email
                 email_message = EmailMessage(
