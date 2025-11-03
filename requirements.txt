@@ -1,0 +1,6 @@
+azure-functions
+pymongo
+feedparser
+google-generativeai
+azure-identity
+azure-keyvault-secrets
