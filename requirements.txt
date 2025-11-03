@@ -7,3 +7,4 @@ azure-keyvault-secrets
 structlog
 python-dotenv
 markdown
+pytest

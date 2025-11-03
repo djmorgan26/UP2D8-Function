@@ -1,5 +1,6 @@
 import os
 import sys
+import pytest
 import pymongo
 from dotenv import load_dotenv
 
@@ -8,63 +9,58 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from shared.key_vault_client import get_secret_client
 
-def test_mongo_connection():
+@pytest.fixture(scope="module")
+def mongo_client():
     load_dotenv()
-    print("Running MongoDB connection test...")
-    try:
-        # Get configuration
-        secret_client = get_secret_client()
+    secret_client = get_secret_client()
+    cosmos_db_connection_string = secret_client.get_secret("COSMOS-DB-CONNECTION-STRING-UP2D8").value
+    client = pymongo.MongoClient(cosmos_db_connection_string)
+    yield client
+    client.close()
 
-        cosmos_db_connection_string = secret_client.get_secret("COSMOS-DB-CONNECTION-STRING-UP2D8").value
+@pytest.fixture(scope="module")
+def up2d8_db(mongo_client):
+    return mongo_client.up2d8
 
-        # Connect to Cosmos DB
-        client = pymongo.MongoClient(cosmos_db_connection_string)
-        db = client.up2d8
+def test_mongo_connection(mongo_client):
+    # Simply connecting and closing should be enough to test connection
+    assert mongo_client.admin.command('ping')['ok'] == 1
 
-        print("Successfully connected to MongoDB.")
+def test_collections_exist(up2d8_db):
+    collections = up2d8_db.list_collection_names()
+    assert "users" in collections
+    assert "articles" in collections
+    assert "rss_feeds" in collections
 
-        # Inspect collections
-        collections = db.list_collection_names()
-        print(f"Collections found: {collections}")
+def test_users_collection_schema(up2d8_db):
+    users_collection = up2d8_db.users
+    sample_user = users_collection.find_one()
+    if sample_user:
+        assert "email" in sample_user
+        assert "subscribed_tags" in sample_user # Updated from 'topics'
+        assert isinstance(sample_user["subscribed_tags"], list)
+        assert "preferences" in sample_user
+    else:
+        pytest.skip("No user documents found to test schema.")
 
-        # Inspect 'users' collection
-        if 'users' in collections:
-            print("\n--- Inspecting 'users' collection ---")
-            users_collection = db.users
-            user_count = users_collection.count_documents({})
-            print(f"Found {user_count} documents in 'users'.")
-            if user_count > 0:
-                sample_user = users_collection.find_one()
-                print(f"Sample user document: {sample_user}")
-                expected_keys = ['email', 'topics', 'preferences']
-                missing_keys = [k for k in expected_keys if k not in sample_user]
-                if missing_keys:
-                    print(f"WARNING: Sample user document is missing expected keys: {missing_keys}")
-                else:
-                    print("Sample user document has the expected keys.")
-        else:
-            print("\n'users' collection not found.")
+def test_articles_collection_schema(up2d8_db):
+    articles_collection = up2d8_db.articles
+    sample_article = articles_collection.find_one()
+    if sample_article:
+        assert "title" in sample_article
+        assert "link" in sample_article
+        assert "summary" in sample_article
+        assert "published" in sample_article
+        assert "processed" in sample_article
+        assert "tags" in sample_article # New field
+        assert isinstance(sample_article["tags"], list)
+    else:
+        pytest.skip("No article documents found to test schema.")
 
-        # Inspect 'articles' collection
-        if 'articles' in collections:
-            print("\n--- Inspecting 'articles' collection ---")
-            articles_collection = db.articles
-            article_count = articles_collection.count_documents({})
-            print(f"Found {article_count} documents in 'articles'.")
-            if article_count > 0:
-                sample_article = articles_collection.find_one()
-                print(f"Sample article document: {sample_article}")
-                expected_keys = ['title', 'link', 'summary', 'published', 'processed']
-                missing_keys = [k for k in expected_keys if k not in sample_article]
-                if missing_keys:
-                    print(f"WARNING: Sample article document is missing expected keys: {missing_keys}")
-                else:
-                    print("Sample article document has the expected keys.")
-        else:
-            print("\n'articles' collection not found.")
-
-    except Exception as e:
-        print(f"MongoDB test failed: {e}")
-
-if __name__ == "__main__":
-    test_mongo_connection()
+def test_rss_feeds_collection_schema(up2d8_db):
+    rss_feeds_collection = up2d8_db.rss_feeds
+    sample_feed = rss_feeds_collection.find_one()
+    if sample_feed:
+        assert "url" in sample_feed
+    else:
+        pytest.skip("No RSS feed documents found to test schema.")
