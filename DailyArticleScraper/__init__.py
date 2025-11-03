@@ -37,14 +37,17 @@ def main(timer: func.TimerRequest) -> None:
 
         cosmos_db_connection_string = secret_client.get_secret("COSMOS-DB-CONNECTION-STRING-UP2D8").value
         
-        # Read RSS feeds from file
-        with open('rss_feeds.txt', 'r') as f:
-            rss_feeds = [line.strip() for line in f if line.strip()]
-
         # Connect to Cosmos DB
         client = pymongo.MongoClient(cosmos_db_connection_string)
         db = client.up2d8
         articles_collection = db.articles
+        rss_feeds_collection = db.rss_feeds # New: Connect to rss_feeds collection
+
+        # Fetch RSS feeds from Cosmos DB
+        rss_feeds = [feed['url'] for feed in rss_feeds_collection.find({})]
+        if not rss_feeds:
+            logging.warning("No RSS feeds found in Cosmos DB. DailyArticleScraper will not run.")
+            return
 
         # Create a unique index on the 'link' field to prevent duplicates
         articles_collection.create_index([("link", pymongo.ASCENDING)], unique=True)
