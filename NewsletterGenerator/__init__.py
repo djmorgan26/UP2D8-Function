@@ -3,6 +3,7 @@ import os
 import pymongo
 import google.generativeai as genai
 import azure.functions as func
+import markdown # Import the markdown library
 from shared.email_service import EmailMessage, SMTPProvider
 from dotenv import load_dotenv
 from shared.key_vault_client import get_secret_client
@@ -78,11 +79,14 @@ def main(timer: func.TimerRequest) -> None:
                     logging.warning(f"Gemini API returned empty content for user {user['email']}. Skipping email.")
                     continue
 
+                # Convert Markdown to HTML
+                newsletter_content_html = markdown.markdown(newsletter_content_markdown)
+
                 # Create and send email
                 email_message = EmailMessage(
                     to=user['email'],
                     subject='Your Daily News Digest',
-                    html_body=newsletter_content_markdown, # Assuming Gemini output is markdown that can be rendered as HTML
+                    html_body=newsletter_content_html, # Use HTML content
                     from_email=sender_email
                 )
                 
