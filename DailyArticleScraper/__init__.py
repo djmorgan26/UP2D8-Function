@@ -34,7 +34,14 @@ def main(timer: func.TimerRequest) -> None:
         new_articles_count = 0
         for feed_url in rss_feeds:
             logging.info(f'Parsing feed: {feed_url}')
-            feed = feedparser.parse(feed_url)
+            try:
+                feed = feedparser.parse(feed_url)
+                if feed.bozo:
+                    logging.warning(f'Malformed feed detected for {feed_url}: {feed.bozo_exception}')
+                    continue
+            except Exception as e:
+                logging.error(f'Error parsing feed {feed_url}: {e}')
+                continue
 
             for entry in feed.entries:
                 try:
