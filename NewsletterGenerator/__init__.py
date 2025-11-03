@@ -54,12 +54,14 @@ def main(timer: func.TimerRequest) -> None:
         sent_newsletters_count = 0
         for user in users:
             try:
-                user_topics = user.get('topics', [])
+                user_subscribed_tags = user.get('subscribed_tags', [])
                 user_preferences = user.get('preferences', 'concise')
-                relevant_articles = [a for a in articles if any(topic in a.get('summary', '') or topic in a.get('title', '') for topic in user_topics)]
+                
+                # Filter articles based on subscribed tags
+                relevant_articles = [a for a in articles if any(tag in a.get('tags', []) for tag in user_subscribed_tags)]
 
                 if not relevant_articles:
-                    logging.info(f"No relevant articles for user {user['email']}")
+                    logging.info(f"No relevant articles for user {user['email']} with subscribed tags {user_subscribed_tags}")
                     continue
 
                 # Generate newsletter content with Gemini

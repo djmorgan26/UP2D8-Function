@@ -8,6 +8,24 @@ import azure.functions as func
 from dotenv import load_dotenv
 from shared.key_vault_client import get_secret_client
 
+# Define a simple keyword-based tagging system
+TAG_KEYWORDS = {
+    "AI": ["ai", "artificial intelligence", "machine learning", "deep learning", "neural network"],
+    "Tech": ["technology", "software", "hardware", "startup", "innovation"],
+    "Science": ["science", "research", "discovery", "biology", "physics", "chemistry"],
+    "Business": ["business", "economy", "finance", "market", "investment"],
+    "Health": ["health", "medical", "medicine", "wellness", "fitness"],
+    "Environment": ["environment", "climate", "sustainability", "ecology"],
+}
+
+def assign_tags(title: str, summary: str) -> list[str]:
+    assigned_tags = []
+    content = (title + " " + summary).lower()
+    for tag, keywords in TAG_KEYWORDS.items():
+        if any(keyword in content for keyword in keywords):
+            assigned_tags.append(tag)
+    return assigned_tags
+
 def main(timer: func.TimerRequest) -> None:
     load_dotenv()
     logging.info('Python timer trigger function ran at %s', timer.past_due)
@@ -45,12 +63,16 @@ def main(timer: func.TimerRequest) -> None:
 
             for entry in feed.entries:
                 try:
+                    # Assign tags to the article
+                    tags = assign_tags(entry.title, entry.summary)
+
                     article = {
                         'title': entry.title,
                         'link': entry.link,
                         'summary': entry.summary,
                         'published': entry.published,
-                        'processed': False
+                        'processed': False,
+                        'tags': tags # Add the new tags field
                     }
                     articles_collection.insert_one(article)
                     new_articles_count += 1
