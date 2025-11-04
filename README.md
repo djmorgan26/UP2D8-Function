@@ -17,7 +17,17 @@ Before you begin, ensure you have the following installed:
 
 -   Python 3.9+
 -   Pip & `venv`
--   Azure Functions Core Tools
+-   Azure Functions Core Tools (see installation instructions below for macOS)
+    *   **macOS Installation:**
+        If you are on macOS, you can install Azure Functions Core Tools using Homebrew:
+        ```bash
+        brew tap azure/functions
+        brew install azure-functions-core-tools@4
+        ```
+        If you don't have Homebrew, install it first:
+        ```bash
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        ```
 -   Azure CLI
 -   Access to an Azure Key Vault with necessary secrets configured.
 
@@ -46,7 +56,30 @@ Before you begin, ensure you have the following installed:
     ```
     Ensure your logged-in Azure account has "Get" permissions for secrets in the project's Key Vault. The service uses `DefaultAzureCredential` for local authentication.
 
-5.  **Run the functions locally:**
+5.  **Ensure Function App Configuration Files Exist:**
+    For `func start` to correctly identify the project root and load settings, ensure `host.json` and `local.settings.json` files are present in the root directory of the repository. If they are missing, you can create minimal versions:
+    *   `host.json`:
+        ```json
+        {
+          "version": "2.0",
+          "extensionBundle": {
+            "id": "Microsoft.Azure.Functions.ExtensionBundle",
+            "version": "[3.*, 4.0.0)"
+          }
+        }
+        ```
+    *   `local.settings.json`:
+        ```json
+        {
+          "IsEncrypted": false,
+          "Values": {
+            "AzureWebJobsStorage": "useDevelopmentStorage=true",
+            "FUNCTIONS_WORKER_RUNTIME": "python"
+          }
+        }
+        ```
+
+6.  **Run the functions locally:**
     ```bash
     func start
     ```
