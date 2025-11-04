@@ -172,3 +172,10 @@ This service contains two timer-triggered functions:
     ```bash
     pip install -r requirements.txt
     ```
+
+## 7. Other Repositories
+
+This project spans 3 repositories (frontend, backend, function app). When doing work that involves integrating with the other repos of this greater project, refer to these handoff documents first.
+
+- **UP2D8-FUNCTION** The handoff document for this repo is `docs/handoff/backend.md`.
+- **UP2D8-FRONTEND** The handoff document for this repo is `docs/handoff/frontend.md`.
