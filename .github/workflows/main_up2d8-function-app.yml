@@ -82,5 +82,4 @@ jobs:
           app-name: 'up2d8-function-app'
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          app-settings: 'AzureWebJobsStorage=${{ secrets.AZURE_WEBJOBS_STORAGE }}'
           
