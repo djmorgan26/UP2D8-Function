@@ -1,0 +1,12 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "msg",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "crawling-tasks-queue",
+      "connection": "UP2D8_STORAGE_CONNECTION_STRING"
+    }
+  ]
+}
