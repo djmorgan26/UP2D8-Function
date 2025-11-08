@@ -13,7 +13,10 @@
 - 📁 **Created** foundation structure (claude.md, INDEX.md, GUIDE.md)
 - 📝 **Customized** context documentation for Azure Functions project
 - 🔧 **Added** `/capture` command for automatic knowledge capture
-- 📋 **Ready** to document existing functions and shared components
+- ✅ **Documented** all 5 Azure Functions with comprehensive details
+- ✅ **Documented** shared orchestration logic component
+- 📊 **Captured** patterns: timer triggers, queue-based processing, AI integration
+- 🎯 **Status**: Complete knowledge base for existing codebase
 
 ---
 
@@ -43,52 +46,100 @@
 
 ## 📊 Project Stats
 
-- **Total knowledge files**: 7 (overview, architecture, 4 preferences, 1 decision)
+- **Total knowledge files**: 13 (overview, architecture, 5 functions, 1 component, 4 preferences, 1 decision)
 - **Azure Functions**: 5 (DailyArticleScraper, NewsletterGenerator, CrawlerOrchestrator, CrawlerWorker, ManualTrigger)
 - **Shared Components**: 1 (orchestration_logic.py)
-- **Features documented**: 0 (ready to document with `/capture`)
-- **Patterns captured**: 0 (ready to capture)
+- **Features documented**: 5 ✅ (all functions documented)
+- **Components documented**: 1 ✅ (orchestration logic)
+- **Patterns captured**: 3 (timer triggers, queue-based, AI integration)
 - **Decisions recorded**: 1
 - **Personal preferences**: 4 (coding, errors, testing, docs)
 - **Dependencies**: 17 Python packages
 - **Test coverage**: To be determined
-- **Last commit**: function running without errors for first time
+- **Last commit**: Add AI knowledge management system
 
 ---
 
 ## 🎯 Current Focus
 
-**Phase**: Documenting existing Azure Functions project
+**Phase**: Knowledge base complete - Ready for development
+
+**Completed**:
+1. ✅ Documented all 5 Azure Functions
+2. ✅ Documented shared orchestration logic
+3. ✅ Captured key patterns (timers, queues, AI integration)
+4. ✅ Established comprehensive knowledge base
 
 **Next Steps**:
-1. Run `/capture` to document existing functions
-2. Document shared orchestration logic
-3. Capture error handling and logging patterns
-4. Document durable functions orchestration workflow
+1. Use knowledge base for feature development
+2. Update docs as new features are added
+3. Capture new patterns as they emerge
+4. Leverage `/capture` for future changes
 
-**Active Work**: Building knowledge base for established Azure Functions codebase
+**Active Work**: Knowledge base ready to support development
 
 ---
 
 ## 🗺️ Knowledge Map
 
-### Azure Functions (5 - to be documented)
-- 📝 **DailyArticleScraper** - Timer-triggered RSS feed scraper (08:00 UTC)
-- 📝 **NewsletterGenerator** - Timer-triggered newsletter generation (09:00 UTC)
-- 📝 **CrawlerOrchestrator** - Durable orchestrator for web crawling
-- 📝 **CrawlerWorker** - Activity function for individual crawls
-- 📝 **ManualTrigger** - HTTP trigger for manual orchestration
+### Azure Functions (5 ✅ Fully Documented)
 
-### Shared Components (1 - to be documented)
-- 📝 **orchestration_logic.py** - Reusable orchestration patterns
+**Article Discovery & Processing**:
+- ✅ **[DailyArticleScraper](./knowledge/features/daily-article-scraper.md)** - Timer-triggered RSS feed scraper (08:00 UTC)
+  - Fetches articles from RSS feeds stored in Cosmos DB
+  - Auto-assigns tags using keyword-based classification
+  - Prevents duplicates with unique index on link field
+  - Daily execution to ensure fresh content
 
-### Patterns (0)
-*Patterns will be captured via `/capture` as you document the codebase:*
-- Timer-triggered functions
-- Durable functions orchestration
-- Queue-based workflows
-- Key Vault secret management
-- Structured logging patterns
+- ✅ **[NewsletterGenerator](./knowledge/features/newsletter-generator.md)** - Timer-triggered newsletter generation (09:00 UTC)
+  - AI-powered personalized newsletter creation using Google Gemini
+  - Filters articles by user-subscribed tags
+  - Converts Markdown to HTML for email delivery
+  - Sends via Brevo SMTP service
+
+**Intelligent Web Crawling**:
+- ✅ **[CrawlerOrchestrator](./knowledge/features/crawler-orchestrator.md)** - Timer-triggered orchestrator (11:00 UTC)
+  - Discovers articles via Google Custom Search API
+  - Uses shared orchestration logic
+  - Outputs URLs to queue via function binding
+  - Implements fan-out pattern
+
+- ✅ **[CrawlerWorker](./knowledge/features/crawler-worker.md)** - Queue-triggered web scraper
+  - Headless browser automation with Playwright
+  - Intelligent content extraction using BeautifulSoup
+  - Processes one URL per instance (parallel execution)
+  - Stores full article content in Cosmos DB
+
+**Manual Operations**:
+- ✅ **[ManualTrigger](./knowledge/features/manual-trigger.md)** - HTTP-triggered manual orchestration
+  - On-demand article discovery
+  - Uses same core logic as CrawlerOrchestrator
+  - Explicitly manages queue operations
+  - Enables testing and ad-hoc runs
+
+### Shared Components (1 ✅ Fully Documented)
+
+- ✅ **[orchestration_logic.py](./knowledge/components/orchestration-logic.md)** - Reusable article discovery logic
+  - Aggregates user topics from Cosmos DB
+  - Searches Google for latest articles
+  - Deduplicates against existing articles
+  - Shared by CrawlerOrchestrator and ManualTrigger
+
+### Patterns (3 Captured)
+
+**Captured Patterns**:
+- ✅ **Timer-Triggered Functions** - Scheduled execution (CRON expressions)
+- ✅ **Queue-Based Processing** - Fan-out pattern for parallel work distribution
+- ✅ **AI Integration** - Google Gemini for newsletter content generation
+
+**Additional Patterns Found**:
+- Structured logging with `structlog`
+- Azure Key Vault secrets management
+- Duplicate prevention via unique indexes
+- Error isolation (per-item error handling)
+- Shared module reusability
+- Async function execution (CrawlerWorker)
+- Headless browser automation (Playwright)
 
 ### Decisions (1)
 - ✅ [001: Personal Preferences System](./context/decisions/001-personal-preferences-system.md) - Cross-project standards approach
@@ -132,14 +183,15 @@
 
 ## 📈 System Growth
 
-This knowledge base will grow as you document the existing codebase:
+Knowledge base **complete** for existing codebase:
 
-- **Week 1**: Foundation + 5 Azure Functions documented
-- **Week 2**: Shared components and patterns captured
-- **Month 1**: Complete knowledge base with orchestration workflows, error handling patterns
-- **Ongoing**: Update as new functions and features are added
+- ✅ **Day 1**: Foundation + AI knowledge system integrated
+- ✅ **Day 1**: All 5 Azure Functions fully documented
+- ✅ **Day 1**: Shared orchestration logic captured
+- ✅ **Day 1**: Key patterns identified and documented
+- **Ongoing**: Update via `/capture` as new functions/features are added
 
-**The system captures institutional knowledge of your Azure Functions project.**
+**The system now contains complete institutional knowledge of your Azure Functions project.**
 
 ---
 
