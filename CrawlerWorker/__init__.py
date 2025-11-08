@@ -7,6 +7,7 @@ from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
 import datetime
 from shared.key_vault_client import get_secret_client
+from shared.backend_client import BackendAPIClient
 import structlog
 from shared.logger_config import configure_logger
 
@@ -28,16 +29,10 @@ async def main(msg: func.QueueMessage) -> None:
     url = msg.get_body().decode('utf-8')
     logger.info("CrawlerWorker function executing.", url=url)
 
-    try:
-        # --- 1. Configuration and Database Connection ---
-        secret_client = get_secret_client()
-        cosmos_db_connection_string = secret_client.get_secret("COSMOS-DB-CONNECTION-STRING-UP2D8").value
+    # Initialize backend API client
+    backend_client = BackendAPIClient()
 
-        client = pymongo.MongoClient(cosmos_db_connection_string)
-        db = client.up2d8
-        articles_collection = db.articles
-        # Ensure index exists to prevent duplicates
-        articles_collection.create_index([("link", pymongo.ASCENDING)], unique=True)
+    try:
 
         # --- 2. Crawl with Playwright ---
         html_content = ""
@@ -75,22 +70,25 @@ async def main(msg: func.QueueMessage) -> None:
 
         summary = ' '.join(article_text.splitlines()[:15]) + '...' # Create a summary
 
-        # --- 4. Store Article in Cosmos DB ---
-        article_doc = {
+        # --- 4. Store Article via Backend API ---
+        article_data = {
             'title': title.strip(),
             'link': url,
             'summary': summary,
             'published': datetime.datetime.utcnow().isoformat(),
-            'processed': False,
+            'tags': [],  # TODO: Add AI-based tagging for crawled articles
             'source': 'intelligent_crawler',
-            'content': article_text # Storing full content for future use
+            'content': article_text  # Full content for future use
         }
 
         try:
-            articles_collection.insert_one(article_doc)
-            logger.info("Successfully inserted new article", link=url)
-        except pymongo.errors.DuplicateKeyError:
-            logger.warning("Article already exists, skipping.", link=url)
+            result = backend_client.create_article(article_data)
+            if "created successfully" in result.get("message", ""):
+                logger.info("Article created via API", link=url, id=result.get("id"))
+            else:
+                logger.info("Article already exists", link=url)
+        except Exception as e:
+            logger.error("Failed to create article via API", link=url, error=str(e))
 
     except Exception as e:
         logger.error("An unexpected error occurred in CrawlerWorker", url=url, error=str(e))
